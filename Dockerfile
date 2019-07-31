@@ -3,24 +3,21 @@ FROM php:7.1.5-apache
 
 #install all the system dependencies and enable PHP modules
 RUN apt-get update && apt-get install -y \
-    libicu-dev \
-    libpq-dev \
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
     libmcrypt-dev \
+    libpng12-dev \
+    libxml2-dev \
+    libpq-dev \
     git \
     zip \
-    unzip \
-    && rm -r /var/lib/apt/lists/* \
-    && docker-php-ext-configure pdo_mysql --with-pdo-mysql=mysqlnd \
-    && docker-php-ext-install \
-    intl \
-    mbstring \
-    mcrypt \
-    pcntl \
-    pdo_mysql \
-    pdo_pgsql \
-    pgsql \
-    zip \
-    opcache
+    curl \
+    && docker-php-ext-install bcmath ctype json mbstring pdo pdo_pgsql tokenizer xml mcrypt \
+    && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
+    && docker-php-ext-install -j$(nproc) gd \
+    && docker-php-ext-install gd
+RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - \
+    && apt-get update && apt-get install -y nodejs
 
 #install composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer
@@ -45,3 +42,7 @@ RUN composer install --no-interaction
 
 #change ownership of our applications
 RUN chown -R www-data:www-data $APP_HOME
+
+RUN npm install -g bower
+
+RUN bower help --allow-root
